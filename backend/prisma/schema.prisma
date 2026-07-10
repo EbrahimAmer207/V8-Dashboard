@@ -1,0 +1,366 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model EFMigrationsHistory {
+  MigrationId    String @id(map: "PK___EFMigrationsHistory") @db.NVarChar(150)
+  ProductVersion String @db.NVarChar(32)
+
+  @@map("__EFMigrationsHistory")
+}
+
+model AspNetRoleClaims {
+  Id          Int         @id(map: "PK_AspNetRoleClaims") @default(autoincrement())
+  RoleId      String      @db.NVarChar(450)
+  ClaimType   String?     @db.NVarChar(Max)
+  ClaimValue  String?     @db.NVarChar(Max)
+  AspNetRoles AspNetRoles @relation(fields: [RoleId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AspNetRoleClaims_AspNetRoles_RoleId")
+
+  @@index([RoleId], map: "IX_AspNetRoleClaims_RoleId")
+}
+
+model AspNetRoles {
+  Id               String             @id(map: "PK_AspNetRoles") @db.NVarChar(450)
+  Name             String?            @db.NVarChar(256)
+  NormalizedName   String?            @db.NVarChar(256)
+  ConcurrencyStamp String?            @db.NVarChar(Max)
+  AspNetRoleClaims AspNetRoleClaims[]
+  AspNetUserRoles  AspNetUserRoles[]
+}
+
+model AspNetUserClaims {
+  Id          Int         @id(map: "PK_AspNetUserClaims") @default(autoincrement())
+  UserId      String      @db.NVarChar(450)
+  ClaimType   String?     @db.NVarChar(Max)
+  ClaimValue  String?     @db.NVarChar(Max)
+  AspNetUsers AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AspNetUserClaims_AspNetUsers_UserId")
+
+  @@index([UserId], map: "IX_AspNetUserClaims_UserId")
+}
+
+model AspNetUserLogins {
+  LoginProvider       String      @db.NVarChar(450)
+  ProviderKey         String      @db.NVarChar(450)
+  ProviderDisplayName String?     @db.NVarChar(Max)
+  UserId              String      @db.NVarChar(450)
+  AspNetUsers         AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AspNetUserLogins_AspNetUsers_UserId")
+
+  @@id([LoginProvider, ProviderKey], map: "PK_AspNetUserLogins")
+  @@index([UserId], map: "IX_AspNetUserLogins_UserId")
+}
+
+model AspNetUserRoles {
+  UserId      String      @db.NVarChar(450)
+  RoleId      String      @db.NVarChar(450)
+  AspNetRoles AspNetRoles @relation(fields: [RoleId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AspNetUserRoles_AspNetRoles_RoleId")
+  AspNetUsers AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AspNetUserRoles_AspNetUsers_UserId")
+
+  @@id([UserId, RoleId], map: "PK_AspNetUserRoles")
+  @@index([RoleId], map: "IX_AspNetUserRoles_RoleId")
+}
+
+model AspNetUsers {
+  Id                   String             @id(map: "PK_AspNetUsers") @db.NVarChar(450)
+  FullName             String             @db.NVarChar(Max)
+  AvatarUrl            String?            @db.NVarChar(Max)
+  NotificationsEnabled Boolean
+  Language             String             @db.NVarChar(Max)
+  SessionsCompleted    Int
+  ExercisesCompleted   Int
+  ActiveDays           Int
+  ResetToken           String?            @db.NVarChar(Max)
+  ResetTokenExpires    DateTime?
+  UserName             String?            @db.NVarChar(256)
+  NormalizedUserName   String?            @db.NVarChar(256)
+  Email                String?            @db.NVarChar(256)
+  NormalizedEmail      String?            @db.NVarChar(256)
+  EmailConfirmed       Boolean
+  PasswordHash         String?            @db.NVarChar(Max)
+  SecurityStamp        String?            @db.NVarChar(Max)
+  ConcurrencyStamp     String?            @db.NVarChar(Max)
+  PhoneNumber          String?            @db.NVarChar(Max)
+  PhoneNumberConfirmed Boolean
+  TwoFactorEnabled     Boolean
+  LockoutEnd           DateTime?          @db.DateTimeOffset
+  LockoutEnabled       Boolean
+  AccessFailedCount    Int
+  AspNetUserClaims     AspNetUserClaims[]
+  AspNetUserLogins     AspNetUserLogins[]
+  AspNetUserRoles      AspNetUserRoles[]
+  AspNetUserTokens     AspNetUserTokens[]
+  BotMessages          BotMessages[]
+  ChatSessions         ChatSessions[]
+  Comments             Comments[]
+  Doctors              Doctors[]
+  FavoriteChats        FavoriteChats[]
+  Likes                Likes[]
+  Patients             Patients?
+  Posts                Posts[]
+  SupportTickets       SupportTickets[]
+
+  @@index([NormalizedEmail], map: "EmailIndex")
+}
+
+model AspNetUserTokens {
+  UserId        String      @db.NVarChar(450)
+  LoginProvider String      @db.NVarChar(450)
+  Name          String      @db.NVarChar(450)
+  Value         String?     @db.NVarChar(Max)
+  AspNetUsers   AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AspNetUserTokens_AspNetUsers_UserId")
+
+  @@id([UserId, LoginProvider, Name], map: "PK_AspNetUserTokens")
+}
+
+model AssessmentResults {
+  Id             Int      @id(map: "PK_AssessmentResults") @default(autoincrement())
+  UserId         String   @db.NVarChar(Max)
+  AssessmentName String   @db.NVarChar(Max)
+  Percentage     Int
+  SymptomLevel   String   @db.NVarChar(Max)
+  AnswersJson    String   @db.NVarChar(Max)
+  Recommendation String   @db.NVarChar(Max)
+  CreatedAt      DateTime
+}
+
+model BotMessages {
+  Id            Int          @id(map: "PK_BotMessages") @default(autoincrement())
+  PatientId     String       @db.NVarChar(450)
+  Sender        String       @db.NVarChar(50)
+  Message       String       @db.NVarChar(Max)
+  SentAt        DateTime
+  AttachmentUrl String?      @db.NVarChar(Max)
+  MessageType   Int          @default(0, map: "DF__BotMessag__Messa__2B0A656D")
+  SessionId     Int          @default(0, map: "DF__BotMessag__Sessi__2BFE89A6")
+  Emotion       String?      @db.NVarChar(50)
+  AspNetUsers   AspNetUsers  @relation(fields: [PatientId], references: [Id], onUpdate: NoAction, map: "FK_BotMessages_AspNetUsers_PatientId")
+  ChatSessions  ChatSessions @relation(fields: [SessionId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_BotMessages_ChatSessions_SessionId")
+
+  @@index([PatientId], map: "IX_BotMessages_PatientId")
+  @@index([SessionId], map: "IX_BotMessages_SessionId")
+  @@index([SessionId, SentAt], map: "IX_BotMessages_SessionId_SentAt")
+}
+
+model ChatbotMessages {
+  Id        Int      @id(map: "PK_ChatbotMessages") @default(autoincrement())
+  UserId    String   @db.NVarChar(Max)
+  Sender    String   @db.NVarChar(Max)
+  Message   String   @db.NVarChar(Max)
+  CreatedAt DateTime
+}
+
+model ChatSessions {
+  Id               Int           @id(map: "PK_ChatSessions") @default(autoincrement())
+  UserId           String        @db.NVarChar(450)
+  Title            String        @db.NVarChar(200)
+  IsTitleGenerated Boolean
+  CreatedAt        DateTime
+  UpdatedAt        DateTime
+  BotMessages      BotMessages[]
+  AspNetUsers      AspNetUsers   @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ChatSessions_AspNetUsers_UserId")
+
+  @@index([UserId], map: "IX_ChatSessions_UserId")
+}
+
+model Comments {
+  Id          Int         @id(map: "PK_Comments") @default(autoincrement())
+  Content     String      @db.NVarChar(Max)
+  UserId      String      @db.NVarChar(450)
+  PostId      Int
+  CreatedAt   DateTime
+  UpdatedAt   DateTime?
+  AspNetUsers AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Comments_AspNetUsers_UserId")
+  Posts       Posts       @relation(fields: [PostId], references: [Id], onUpdate: NoAction, map: "FK_Comments_Posts_PostId")
+
+  @@index([PostId], map: "IX_Comments_PostId")
+  @@index([UserId], map: "IX_Comments_UserId")
+}
+
+model Doctors {
+  Id              Int         @id(map: "PK_Doctors") @default(autoincrement())
+  UserId          String      @db.NVarChar(450)
+  Name            String      @db.NVarChar(Max)
+  Specialization  String      @db.NVarChar(Max)
+  ExperienceYears Int
+  Rating          Float
+  Bio             String      @db.NVarChar(Max)
+  SessionPrice    Decimal     @db.Decimal(18, 2)
+  ImageUrl        String?     @db.NVarChar(Max)
+  NationalNumber  String      @default("N'", map: "DF__Doctors__Nationa__151B244E") @db.NVarChar(Max)
+  AspNetUsers     AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Doctors_AspNetUsers_UserId")
+
+  @@index([UserId], map: "IX_Doctors_UserId")
+}
+
+model DoctorSessions {
+  Id          Int      @id(map: "PK_DoctorSessions") @default(autoincrement())
+  DoctorId    String   @db.NVarChar(Max)
+  PatientId   String   @db.NVarChar(450)
+  PatientName String   @db.NVarChar(Max)
+  SessionType String   @db.NVarChar(Max)
+  ScheduledAt DateTime
+  Price       Decimal  @db.Decimal(18, 2)
+  VideoUrl    String?  @db.NVarChar(Max)
+  AudioUrl    String?  @db.NVarChar(Max)
+  PdfUrl      String?  @db.NVarChar(Max)
+  ImageUrl    String?  @db.NVarChar(Max)
+  IsStarted   Boolean
+  Patients    Patients @relation(fields: [PatientId], references: [UserId], onUpdate: NoAction, map: "FK_DoctorSessions_Patients_PatientId")
+
+  @@index([PatientId], map: "IX_DoctorSessions_PatientId")
+}
+
+model Faqs {
+  Id       Int     @id(map: "PK_Faqs") @default(autoincrement())
+  Question String  @db.NVarChar(Max)
+  Answer   String  @db.NVarChar(Max)
+  IsActive Boolean
+}
+
+model FavoriteChats {
+  Id             Int         @id(map: "PK_FavoriteChats") @default(autoincrement())
+  UserId         String      @db.NVarChar(450)
+  ConversationId String      @db.NVarChar(450)
+  CreatedAt      DateTime
+  AspNetUsers    AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_FavoriteChats_AspNetUsers_UserId")
+
+  @@unique([UserId, ConversationId], map: "IX_FavoriteChats_UserId_ConversationId")
+}
+
+model Likes {
+  Id          Int         @id(map: "PK_Likes") @default(autoincrement())
+  UserId      String      @db.NVarChar(450)
+  PostId      Int
+  AspNetUsers AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Likes_AspNetUsers_UserId")
+  Posts       Posts       @relation(fields: [PostId], references: [Id], onUpdate: NoAction, map: "FK_Likes_Posts_PostId")
+
+  @@index([PostId], map: "IX_Likes_PostId")
+  @@index([UserId], map: "IX_Likes_UserId")
+}
+
+model Messages {
+  Id             Int      @id(map: "PK_Messages") @default(autoincrement())
+  SenderId       String   @db.NVarChar(450)
+  ReceiverId     String   @db.NVarChar(450)
+  Content        String?  @db.NVarChar(4000)
+  SentAt         DateTime
+  IsRead         Boolean
+  ConversationId String   @db.NVarChar(450)
+  AttachmentName String?  @db.NVarChar(Max)
+  AttachmentUrl  String?  @db.NVarChar(Max)
+  IsPinned       Boolean  @default(dbgenerated("CONVERT([bit],(0))"), map: "DF__Messages__IsPinn__29221CFB")
+  MessageType    Int      @default(0, map: "DF__Messages__Messag__2A164134")
+
+  @@index([ConversationId], map: "IX_Messages_ConversationId")
+  @@index([ConversationId, SentAt], map: "IX_Messages_ConversationId_SentAt")
+  @@index([ReceiverId], map: "IX_Messages_ReceiverId")
+  @@index([SenderId], map: "IX_Messages_SenderId")
+}
+
+model MoodEntries {
+  Id     Int      @id(map: "PK_MoodEntries") @default(autoincrement())
+  UserId String   @db.NVarChar(Max)
+  Value  Int
+  Date   DateTime
+}
+
+model Notifications {
+  Id        Int      @id(map: "PK_Notifications") @default(autoincrement())
+  UserId    String   @db.NVarChar(Max)
+  Title     String   @db.NVarChar(Max)
+  Body      String   @db.NVarChar(Max)
+  Type      String   @db.NVarChar(Max)
+  IsRead    Boolean
+  CreatedAt DateTime
+}
+
+model PatientRecords {
+  Id            Int      @id(map: "PK_PatientRecords") @default(autoincrement())
+  PatientId     String   @db.NVarChar(450)
+  DoctorId      String   @db.NVarChar(Max)
+  Diagnosis     String   @db.NVarChar(Max)
+  Treatment     String   @db.NVarChar(Max)
+  Notes         String?  @db.NVarChar(Max)
+  TreatmentPlan String?  @db.NVarChar(Max)
+  CreatedAt     DateTime
+  Patients      Patients @relation(fields: [PatientId], references: [UserId], onDelete: Cascade, onUpdate: NoAction, map: "FK_PatientRecords_Patients_PatientId")
+
+  @@index([PatientId], map: "IX_PatientRecords_PatientId")
+}
+
+model Patients {
+  Id             Int              @id(map: "PK_Patients") @default(autoincrement())
+  UserId         String           @unique(map: "AK_Patients_UserId") @db.NVarChar(450)
+  Age            Int
+  Gender         String           @db.NVarChar(Max)
+  RegisteredAt   DateTime
+  DoctorSessions DoctorSessions[]
+  PatientRecords PatientRecords[]
+  AspNetUsers    AspNetUsers      @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Patients_AspNetUsers_UserId")
+}
+
+model PodcastEpisodes {
+  Id                Int      @id(map: "PK_PodcastEpisodes") @default(autoincrement())
+  Title             String   @db.NVarChar(Max)
+  Description       String   @db.NVarChar(Max)
+  AudioUrl          String   @map("FileUrl") @db.NVarChar(Max)
+  CoverImageUrl     String   @db.NVarChar(Max)
+  DurationInSeconds Int      @map("Duration")
+  PublishDate       DateTime @map("CreatedAt")
+  IsPublished       Boolean
+}
+
+model Posts {
+  Id            Int         @id(map: "PK_Posts") @default(autoincrement())
+  Content       String      @db.NVarChar(Max)
+  ImageUrl      String?     @db.NVarChar(Max)
+  UserId        String      @db.NVarChar(450)
+  CreatedAt     DateTime
+  UpdatedAt     DateTime?
+  CommentsCount Int
+  SharesCount   Int
+  LikesCount    Int
+  Comments      Comments[]
+  Likes         Likes[]
+  AspNetUsers   AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Posts_AspNetUsers_UserId")
+
+  @@index([UserId], map: "IX_Posts_UserId")
+}
+
+model Reports {
+  Id         Int      @id(map: "PK_Reports") @default(autoincrement())
+  DoctorId   String   @db.NVarChar(Max)
+  PatientId  String   @db.NVarChar(Max)
+  Type       String   @db.NVarChar(Max)
+  FileUrl    String   @db.NVarChar(Max)
+  ReportDate DateTime
+}
+
+model Resources {
+  Id            Int      @id(map: "PK_Resources") @default(autoincrement())
+  Title         String   @db.NVarChar(Max)
+  Description   String?  @db.NVarChar(Max)
+  CoverImageUrl String?  @db.NVarChar(Max)
+  Type          Int
+  Url           String?  @map("FileUrl") @db.NVarChar(Max)
+  Duration      Int?
+  FileSize      Float?
+  CreatedDate   DateTime
+}
+
+model SupportTickets {
+  Id          Int         @id(map: "PK_SupportTickets") @default(autoincrement())
+  UserId      String      @db.NVarChar(450)
+  Subject     String      @db.NVarChar(Max)
+  Message     String      @db.NVarChar(Max)
+  Status      String      @db.NVarChar(Max)
+  CreatedAt   DateTime
+  AspNetUsers AspNetUsers @relation(fields: [UserId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_SupportTickets_AspNetUsers_UserId")
+
+  @@index([UserId], map: "IX_SupportTickets_UserId")
+}

@@ -1,0 +1,263 @@
+// Custom button styles
+.btn {
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+
+  &:hover {
+    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  }
+}
+
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+
+  &:hover {
+    background-color: #4b5563;
+  }
+}
+
+// Custom card styles
+.card {
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-header {
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+}
+
+// Custom form styles
+.form-control,
+.form-select {
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+
+  &:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+}
+
+// Table styles
+.table {
+  margin-bottom: 0;
+
+  thead {
+    background-color: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+
+    th {
+      border: none;
+      font-weight: 600;
+      color: #374151;
+      padding: 1rem;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #e5e7eb;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: #f9fafb;
+      }
+
+      td {
+        padding: 1rem;
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+// Badge styles
+.badge {
+  border-radius: 9999px;
+  padding: 0.35rem 0.75rem;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+// Alert styles
+.alert {
+  border-radius: 0.5rem;
+  border: none;
+  margin-bottom: 1rem;
+
+  &.alert-info {
+    background-color: #ecf7ff;
+    color: #0369a1;
+  }
+
+  &.alert-success {
+    background-color: #ecfdf5;
+    color: #047857;
+  }
+
+  &.alert-warning {
+    background-color: #fffbeb;
+    color: #b45309;
+  }
+
+  &.alert-danger {
+    background-color: #fef2f2;
+    color: #b91c1c;
+  }
+}
+
+// Modal styles
+.modal-content {
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+// Sidebar styles
+.sidebar {
+  background-color: #fff;
+  border-right: 1px solid #e5e7eb;
+  transition: width 0.3s ease;
+
+  .nav-link {
+    color: #6b7280;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: #f3f4f6;
+      color: #4f46e5;
+    }
+
+    &.active {
+      background-color: #ecf7ff;
+      color: #4f46e5;
+    }
+  }
+}
+
+// Dark mode styles
+[data-bs-theme='dark'] {
+  .sidebar {
+    background-color: #1f2937;
+    border-right-color: #374151;
+
+    .nav-link {
+      color: #d1d5db;
+
+      &:hover {
+        background-color: #374151;
+      }
+
+      &.active {
+        background-color: #1e40af;
+        color: #60a5fa;
+      }
+    }
+  }
+
+  .card {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+
+  .table {
+    thead {
+      background-color: #374151;
+
+      th {
+        color: #d1d5db;
+      }
+    }
+
+    tbody tr:hover {
+      background-color: #374151;
+    }
+  }
+
+  .form-control,
+  .form-select {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #d1d5db;
+
+    &:focus {
+      background-color: #374151;
+      border-color: #4f46e5;
+      color: #d1d5db;
+    }
+  }
+}
+
+// Utility classes
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-in-up {
+  animation: slideInUp 0.3s ease-in-out;
+}

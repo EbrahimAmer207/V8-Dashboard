@@ -1,0 +1,17 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=db43014.public.databaseasp.net; Database=db43014; User Id=db43014; Password=2j%SsM7!4@Am; Encrypt=True; TrustServerCertificate=True; MultipleActiveResultSets=True;"
+  },
+    "Jwt": {
+        "Key": "ThisIsASecretKeyForJWTGeneration123!",
+        "Issuer": "MedicalApp",
+        "Audience": "MedicalAppUsers"
+    },
+    "Logging": {
+        "LogLevel": {
+            "Default": "Information",
+            "Microsoft.AspNetCore": "Warning"
+        }
+    },
+    "AllowedHosts": "*"
+}
