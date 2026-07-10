@@ -1,479 +1,156 @@
-# Deployment Guide
+# 🚀 V8 Dashboard — Production Deployment Guide
 
-## Deployment Options
-
-### Backend Deployment
-
-#### Option 1: Vercel (Recommended)
-
-1. **Push to GitHub**
-   ```bash
-   cd backend
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-2. **Connect to Vercel**
-   - Go to https://vercel.com
-   - Import your GitHub repository
-   - Select the `backend` directory as root
-
-3. **Environment Variables**
-   - Set all `.env` variables in Vercel dashboard
-   - Database connection string
-   - JWT secrets
-
-4. **Deploy**
-   - Vercel automatically deploys on push
-
-#### Option 2: Heroku
-
-1. **Install Heroku CLI**
-   ```bash
-   npm install -g heroku
-   ```
-
-2. **Login and Create App**
-   ```bash
-   heroku login
-   heroku create your-app-name
-   ```
-
-3. **Set Environment Variables**
-   ```bash
-   heroku config:set DATABASE_URL=postgresql://...
-   heroku config:set JWT_SECRET=your_secret
-   heroku config:set CORS_ORIGIN=https://your-frontend.com
-   ```
-
-4. **Deploy**
-   ```bash
-   git push heroku main
-   ```
-
-#### Option 3: AWS (EC2)
-
-1. **Launch EC2 Instance**
-   - Choose Ubuntu 22.04 LTS
-   - Allow ports 3001, 22 in security group
-
-2. **Connect and Setup**
-   ```bash
-   # SSH into server
-   ssh -i key.pem ec2-user@your-ip
-   
-   # Install Node.js
-   curl -sL https://deb.nodesource.com/setup_18.x | sudo bash -
-   sudo apt install -y nodejs
-   
-   # Install PostgreSQL
-   sudo apt install -y postgresql
-   ```
-
-3. **Deploy Application**
-   ```bash
-   git clone <your-repo>
-   cd backend
-   npm install
-   npm run build
-   npm run start:prod
-   ```
-
-4. **Use PM2 for Process Management**
-   ```bash
-   npm install -g pm2
-   pm2 start dist/main.js --name "admin-dashboard-api"
-   pm2 startup
-   pm2 save
-   ```
-
-5. **Setup Nginx Reverse Proxy**
-   ```nginx
-   server {
-       listen 80;
-       server_name yourdomain.com;
-       
-       location / {
-           proxy_pass http://localhost:3001;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
-
-### Frontend Deployment
-
-#### Option 1: Vercel (Recommended)
-
-1. **Deploy**
-   - Connect GitHub repository to Vercel
-   - Select the `frontend` directory as root
-   - Set environment variable `NEXT_PUBLIC_API_URL`
-   - Deploy automatically on push
-
-#### Option 2: Netlify
-
-1. **Create netlify.toml**
-   ```toml
-   [build]
-   command = "npm run build"
-   publish = ".next"
-   
-   [[redirects]]
-   from = "/*"
-   to = "/index.html"
-   status = 200
-   ```
-
-2. **Deploy**
-   - Connect GitHub to Netlify
-   - Set `NEXT_PUBLIC_API_URL` in Netlify dashboard
-   - Deploy
-
-#### Option 3: AWS S3 + CloudFront
-
-1. **Build for Production**
-   ```bash
-   npm run build
-   npm run export
-   ```
-
-2. **Upload to S3**
-   ```bash
-   aws s3 sync out/ s3://your-bucket-name
-   ```
-
-3. **Set up CloudFront**
-   - Create distribution pointing to S3
-   - Set caching headers
-   - Configure custom domain
-
-## Database Deployment
-
-### Supabase (Managed PostgreSQL)
-
-1. **Create Project**
-   - Go to https://supabase.io
-   - Create new project
-   - Copy database URL
-
-2. **Update Backend**
-   ```bash
-   # Set DATABASE_URL in .env
-   DATABASE_URL=postgresql://user:password@db.supabase.co:5432/postgres
-   ```
-
-3. **Run Migrations**
-   ```bash
-   npm run db:generate
-   npm run db:migrate
-   npm run db:seed
-   ```
-
-### Self-Hosted PostgreSQL (AWS RDS)
-
-1. **Create RDS Instance**
-   - Engine: PostgreSQL 14
-   - Multi-AZ for high availability
-   - Automated backups enabled
-
-2. **Connect**
-   ```bash
-   psql -h your-rds-endpoint.amazonaws.com -U postgres
-   CREATE DATABASE admin_dashboard;
-   ```
-
-3. **Update Connection String**
-   ```
-   DATABASE_URL=postgresql://user:password@your-rds-endpoint.amazonaws.com:5432/admin_dashboard
-   ```
-
-## SSL/TLS Certificates
-
-### Let's Encrypt (Free)
-
-```bash
-# Install Certbot
-sudo apt install -y certbot python3-certbot-nginx
-
-# Generate certificate
-sudo certbot certonly --nginx -d yourdomain.com
-
-# Auto-renewal
-sudo systemctl enable certbot.timer
-sudo systemctl start certbot.timer
-```
-
-### Application-Level CORS Headers
-
-```typescript
-// backend/src/main.ts
-app.enableCors({
-  origin: process.env.CORS_ORIGIN || 'https://yourdomain.com',
-  credentials: true,
-});
-```
-
-## Environment Variables
-
-### Production Backend .env
-
-```env
-NODE_ENV=production
-PORT=3001
-DATABASE_URL=postgresql://user:pass@db.supabase.co:5432/postgres
-JWT_SECRET=<randomkeygenhere>
-JWT_REFRESH_SECRET=<randomkeygenhere>
-CORS_ORIGIN=https://yourdomain.com
-```
-
-### Production Frontend .env.production
-
-```env
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api/v1
-NEXT_PUBLIC_APP_NAME=Admin Dashboard
-```
-
-## Performance Optimization
-
-### Backend
-```typescript
-// Enable compression
-import * as compression from 'compression';
-app.use(compression());
-
-// Rate limiting
-import rateLimit from 'express-rate-limit';
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100
-});
-app.use('/api/', limiter);
-```
-
-### Frontend
-```typescript
-// Next.js automatically optimizes:
-// - Code splitting
-// - Image optimization
-// - Static generation
-// - API route optimization
-```
-
-### Database
-```sql
--- Create indexes for frequently queried columns
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_content_status ON content(status);
-CREATE INDEX idx_logs_created_at ON activity_logs(created_at);
-```
-
-## Monitoring & Logging
-
-### Backend Logging
-
-```typescript
-import { Logger } from '@nestjs/common';
-
-@Injectable()
-export class MyService {
-  private readonly logger = new Logger(MyService.name);
-
-  method() {
-    this.logger.log('Important information');
-    this.logger.error('Error occurred');
-    this.logger.warn('Warning message');
-  }
-}
-```
-
-### Error Tracking (Sentry)
-
-```typescript
-// backend/src/main.ts
-import * as Sentry from "@sentry/node";
-
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  environment: process.env.NODE_ENV,
-});
-```
-
-### Monitoring Tools
-
-- **Prometheus**: Metrics collection
-- **Grafana**: Visualization
-- **Datadog**: Full-stack monitoring
-- **New Relic**: Performance monitoring
-
-## Backup Strategy
-
-### Database Backups
-
-```bash
-# Daily automated backups (AWS RDS)
-# Or Supabase automatic backups
-
-# Manual backup
-pg_dump postgresql://user:pass@host/dbname > backup.sql
-
-# Restore
-psql postgresql://user:pass@host/dbname < backup.sql
-```
-
-### File Backups
-
-```bash
-# Backup uploads directory
-aws s3 sync ./uploads s3://backup-bucket/uploads --delete
-
-# Backup database dumps
-aws s3 cp backup.sql s3://backup-bucket/backups/
-```
-
-## CI/CD Pipeline (GitHub Actions)
-
-### Backend Workflow
-
-```yaml
-name: Deploy Backend
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      
-      - name: Use Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18'
-      
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ./backend
-      
-      - name: Run tests
-        run: npm test
-        working-directory: ./backend
-      
-      - name: Build
-        run: npm run build
-        working-directory: ./backend
-      
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v20
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          scope: ${{ secrets.VERCEL_ORG_ID }}
-```
-
-### Frontend Workflow
-
-```yaml
-name: Deploy Frontend
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      
-      - name: Use Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18'
-      
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ./frontend
-      
-      - name: Type check
-        run: npm run type-check
-        working-directory: ./frontend
-      
-      - name: Build
-        run: npm run build
-        working-directory: ./frontend
-      
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v20
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          scope: ${{ secrets.VERCEL_ORG_ID }}
-```
-
-## Scaling Considerations
-
-### Horizontal Scaling
-
-```
-Load Balancer (nginx/HAProxy)
-    ↓
-[Backend 1] [Backend 2] [Backend 3]
-    ↓
-  (Connection Pool)
-    ↓
-PostgreSQL (with replicas)
-```
-
-### Caching Layer
-
-```typescript
-// Add Redis for session/cache
-import * as redis from 'redis';
-
-const client = redis.createClient();
-
-// Cache API responses
-async getCached(key: string) {
-  const cached = await client.get(key);
-  if (cached) return JSON.parse(cached);
-  // Fetch from DB and cache
-}
-```
-
-## Health Checks
-
-### Backend Health Endpoint
-
-```typescript
-@Get('health')
-healthCheck() {
-  return { status: 'ok', timestamp: new Date() };
-}
-```
-
-### Configure Load Balancer
-
-```nginx
-location /health {
-    proxy_pass http://backend:3001/api/v1/health;
-}
-```
-
-## Disaster Recovery
-
-1. **Automated Backups**: Daily database backups
-2. **Replication**: Multi-region database replicas
-3. **CDN**: Global content delivery
-4. **Failover**: Automated traffic rerouting
-5. **Documentation**: Runbooks for recovery procedures
+This guide describes how to deploy the V8 Dashboard full-stack system to production.
 
 ---
 
-**Your application is now ready for production!**
+## 🏗️ Production Architecture
+
+```
+                 ┌─────────────────────────────┐
+                 │       Next.js SPA           │
+                 │   (Hosted on Vercel/Netlify)│
+                 └──────────────┬──────────────┘
+                                │ HTTPS Requests
+                                ▼
+                 ┌─────────────────────────────┐
+                 │       NestJS Server         │
+                 │ (Hosted on Render/VPS/PaaS) │
+                 └──────────────┬──────────────┘
+                                │ SQL Connection (Port 1433)
+                                ▼
+                 ┌─────────────────────────────┐
+                 │       SQL Server DB         │
+                 │  (Azure SQL/databaseasp.net)│
+                 └─────────────────────────────┘
+```
+
+---
+
+## 📂 1. Database Deployment (SQL Server)
+
+The application requires a **Microsoft SQL Server** database instance (SQL Server 2019 or later). 
+
+### Option A: Managed Cloud Database (Azure SQL / databaseasp.net)
+1.  Create a SQL Server database in Azure portal or your hosting provider (e.g., `databaseasp.net`).
+2.  Obtain the connection endpoint, database name, username, and password.
+3.  Ensure firewall rules permit connections from your NestJS backend production servers (whitelist `0.0.0.0/0` if necessary or use specific backend IP blocks).
+
+### Option B: Self-Hosted SQL Server (Windows/Linux VPS)
+1.  Install SQL Server on your virtual machine.
+2.  Enable TCP/IP connections in the SQL Server Configuration Manager.
+3.  Set the default port to `1433`.
+4.  Restart SQL Server service and allow port `1433` in the system firewall.
+
+---
+
+## ⚙️ 2. Backend Deployment (NestJS)
+
+The NestJS backend compiles to native JavaScript and can be hosted on any Node.js environment.
+
+### Option A: Deploying to Render / Railway / PaaS
+1.  Link your GitHub repository to the hosting service.
+2.  Set the **Root Directory** to `backend`.
+3.  Specify the build and start commands:
+    *   **Build Command:** `npm run build`
+    *   **Start Command:** `npm run start:prod`
+4.  Configure the environment variables in the provider dashboard (see [Environment Variables](#-environment-variables)).
+
+### Option B: Deploying to VPS (Ubuntu EC2 / DigitalOcean)
+1.  SSH into your server and install Node.js (v18+) and Git.
+2.  Clone the repository and install dependencies:
+    ```bash
+    git clone <your-repo-url>
+    cd backend
+    npm install
+    ```
+3.  Build the project:
+    ```bash
+    npm run build
+    ```
+4.  Use a process manager like **PM2** to run the server in the background:
+    ```bash
+    npm install -g pm2
+    pm2 start dist/main.js --name "v8-backend"
+    pm2 startup
+    pm2 save
+    ```
+5.  Set up Nginx as a reverse proxy to forward traffic to port `3001`.
+
+---
+
+## 🎨 3. Frontend Deployment (Next.js)
+
+The Next.js single-page application is optimized for deployment on Vercel.
+
+### Option A: Vercel (Recommended)
+1.  Connect your GitHub repository to Vercel.
+2.  Create a new project and select the `frontend` folder as the root directory.
+3.  Under build settings, Vercel will automatically detect the Next.js presets.
+4.  Add the production environment variables:
+    *   `NEXT_PUBLIC_API_URL`: `https://your-backend-domain.com/api/v1`
+    *   `NEXT_PUBLIC_APP_NAME`: `V8 Dashboard`
+5.  Click **Deploy**.
+
+---
+
+## 🔒 4. Production Environment Variables
+
+Ensure the following variables are configured in your production hosting consoles:
+
+### Production Backend (`backend`)
+```env
+NODE_ENV=production
+PORT=3001
+APP_NAME=V8 Dashboard
+
+# SQL Server Production Connection String
+DATABASE_URL="sqlserver://<production-db-host>:1433;database=<db-name>;user=<db-user>;password=<db-pass>;encrypt=true;trustServerCertificate=false;"
+
+# Generate secure secrets for production (use openssl rand -base64 32)
+JWT_SECRET=your_production_secure_access_token_secret
+JWT_REFRESH_SECRET=your_production_secure_refresh_token_secret
+JWT_EXPIRATION=15m
+JWT_REFRESH_EXPIRATION=7d
+
+# Next.js Application Origin
+CORS_ORIGIN=https://your-frontend-domain.com
+
+# Media Configurations
+PUBLIC_MEDIA_URL=https://your-backend-domain.com
+MEDIA_BASE_URL=https://your-backend-domain.com
+```
+
+### Production Frontend (`frontend`)
+```env
+NEXT_PUBLIC_API_URL=https://your-backend-domain.com/api/v1
+NEXT_PUBLIC_APP_NAME="V8 Dashboard"
+```
+
+---
+
+## 💾 5. Database Backup & Disaster Recovery
+
+### Manual SQL Server Backups
+To create a backup copy of your SQL Server database:
+```sql
+BACKUP DATABASE [v8_database]
+TO DISK = N'/var/opt/mssql/data/v8_database_backup.bak'
+WITH NOFORMAT, NOINIT,
+NAME = N'v8_database-Full Database Backup', SKIP, NOREWIND, NOUNLOAD, STATS = 10;
+```
+
+### Restoring Backups
+To restore the database:
+```sql
+RESTORE DATABASE [v8_database]
+FROM DISK = N'/var/opt/mssql/data/v8_database_backup.bak'
+WITH FILE = 1, NOUNLOAD, REPLACE, STATS = 5;
+```
+
+---
+
+## 📈 6. Scaling & Health Checks
+
+*   **Health Check Endpoint:** The NestJS backend provides a health check route at `https://your-backend-domain.com/api/v1/health` (if configured in app controller).
+*   **Database Pooling:** Prisma manages database connections automatically, but you can configure connection pooling flags on the `DATABASE_URL` string if query volume scales up.

@@ -1,461 +1,193 @@
-# Admin Dashboard - Complete Setup Guide
+# 🛠️ V8 Dashboard — Complete Setup Guide
 
-This is a production-ready admin dashboard system built with Next.js, NestJS, and PostgreSQL.
+This guide describes how to configure and run the V8 Dashboard full-stack system locally or in development.
 
 ## 📋 Table of Contents
+- [Prerequisites](#-prerequisites)
+- [Project Structure](#-project-structure)
+- [Backend Setup](#-backend-setup)
+- [Frontend Setup](#-frontend-setup)
+- [Running the Application](#-running-the-application)
+- [Database Schema & Migrations](#-database-schema--migrations)
+- [Troubleshooting](#-troubleshooting)
 
-- [Prerequisites](#prerequisites)
-- [Project Structure](#project-structure)
-- [Backend Setup](#backend-setup)
-- [Frontend Setup](#frontend-setup)
-- [Database Setup](#database-setup)
-- [Running the Application](#running-the-application)
-- [API Documentation](#api-documentation)
-- [Features](#features)
-- [Customization](#customization)
+---
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Node.js 18+ and npm
-- PostgreSQL 12+ or Supabase account
-- Git
-- Code editor (VS Code recommended)
+Before setting up, ensure you have the following installed:
+*   **Node.js**: `v18.x` or `v20.x` (LTS recommended)
+*   **npm**: `v9.x` or higher
+*   **SQL Server**: Local SQL Server Instance (Express/Developer Edition) or access to a Remote SQL Server Instance (configured on port `1433`).
+*   **Git**: For version control.
 
-## Project Structure
+---
+
+## 📂 Project Structure
 
 ```
-Dash/
-├── backend/                 # NestJS Server
+V8-Dashboard/
+├── backend/                 # NestJS Application
 │   ├── src/
 │   │   ├── modules/        # Feature modules
-│   │   │   ├── auth/       # Authentication
-│   │   │   ├── users/      # User management
-│   │   │   ├── roles/      # Role management
-│   │   │   ├── permissions/# Permission management
-│   │   │   ├── content/    # Content management
-│   │   │   ├── logs/       # Activity logs
-│   │   │   └── notifications/
-│   │   ├── common/         # Shared utilities
-│   │   │   ├── guards/     # Auth guards
-│   │   │   ├── filters/    # Exception filters
-│   │   │   └── decorators/ # Custom decorators
-│   │   ├── config/         # Configuration
-│   │   ├── main.ts         # Entry point
-│   │   └── app.module.ts   # Root module
-│   ├── prisma/
-│   │   ├── schema.prisma   # Database schema
-│   │   └── seed.ts         # Seed script
-│   └── package.json
+│   │   │   ├── auth/       # JWT Auth (Bcrypt, AspNetUsers mapping)
+│   │   │   ├── admin-compat/# Compatibility controllers for ASP.NET tables
+│   │   │   ├── chat/       # Bot Sessions & Messages
+│   │   │   ├── dashboard/   # Summary statistics & logs metrics
+│   │   │   ├── doctors/    # Therapists/Doctors administration
+│   │   │   ├── resources/  # Library content and file uploads
+│   │   │   └── ...
+│   │   ├── prisma/
+│   │   │   └── schema.prisma # SQL Server Prisma Schema
+│   │   └── main.ts         # NestJS App Entry Point
+│   └── .env.example
 │
 └── frontend/               # Next.js Application
-    ├── app/               # App Router
-    │   ├── auth/          # Auth pages
-    │   ├── dashboard/     # Dashboard page
-    │   ├── users/         # Users management
-    │   ├── content/       # Content management
-    │   ├── analytics/     # Analytics page
-    │   └── settings/      # Settings page
-    ├── components/        # Reusable components
-    │   ├── layout/        # Layout components
-    │   └── common/        # Common components
-    ├── services/          # API services
-    ├── store/            # Zustand store
-    ├── styles/           # SCSS styles
-    ├── types/            # TypeScript types
-    └── package.json
+    ├── app/               # App Router Pages
+    │   ├── clinical/      # Medical clinical dashboard
+    │   ├── therapists/    # Therapist management UI
+    │   ├── chat/          # Real-time AI Therapist Chat UI
+    │   ├── social/        # Social feed (Posts, Likes, Comments)
+    │   └── ...
+    └── .env.example
 ```
 
-## Backend Setup
+---
+
+## ⚙️ Backend Setup
 
 ### 1. Install Dependencies
-
+Navigate to the `backend` directory and install the packages:
 ```bash
 cd backend
 npm install
 ```
 
 ### 2. Environment Configuration
-
-Copy `.env.example` to `.env` and update values:
-
+Copy the template `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
 
-Update `.env`:
-```
+Open `.env` and configure your **SQL Server** connection string and secrets:
+```env
+# App Configuration
 NODE_ENV=development
 PORT=3001
-DATABASE_URL=postgresql://user:password@localhost:5432/admin_dashboard
-JWT_SECRET=your_super_secret_jwt_key
+APP_NAME=Admin Dashboard
+
+# SQL Server Database URL
+DATABASE_URL="sqlserver://<host>:<port>;database=<database_name>;user=<username>;password=<password>;encrypt=false;trustServerCertificate=true;"
+
+# JWT Secrets
+JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 JWT_EXPIRATION=15m
-JWT_REFRESH_SECRET=your_super_secret_refresh_key
+JWT_REFRESH_SECRET=your_super_secret_refresh_key_change_this_in_production
 JWT_REFRESH_EXPIRATION=7d
+
+# CORS Origin (Points to Next.js dev server)
 CORS_ORIGIN=http://localhost:3000
+
+# File Upload Configuration
+MAX_FILE_SIZE=5242880
+UPLOAD_DIR=./uploads
+PUBLIC_MEDIA_URL=http://localhost:3001
+MEDIA_BASE_URL=http://localhost:3001
 ```
 
-### 3. Database Setup
-
-#### Using Supabase:
-
-1. Create a new Supabase project
-2. Get your database URL from project settings
-3. Update `DATABASE_URL` in `.env`
-
-#### Using Local PostgreSQL:
-
-```bash
-createdb admin_dashboard
-```
-
-### 4. Run Migrations
-
+### 3. Generate Prisma Client
+Prisma needs to read your SQL Server schema definitions to compile the type-safe client:
 ```bash
 npm run db:generate
-npm run db:migrate
-npm run db:seed
 ```
+*(This maps the ASP.NET Identity tables like `AspNetUsers`, `SupportTickets`, etc.)*
 
-This will:
-- Generate Prisma client
-- Run migrations
-- Seed with default data (admin user, roles, permissions)
-
-### 5. Start Backend
-
+### 4. Start NestJS Dev Server
 ```bash
 npm run start:dev
 ```
+The NestJS backend will start listening on `http://localhost:3001`.
 
-Backend runs on `http://localhost:3001`
+---
 
-## Frontend Setup
+## 🎨 Frontend Setup
 
 ### 1. Install Dependencies
-
+Navigate to the `frontend` directory and install the node modules:
 ```bash
-cd frontend
+cd ../frontend
 npm install
 ```
 
 ### 2. Environment Configuration
-
-Copy `.env.example` to `.env.local`:
-
+Copy the template `.env.example` to `.env.local`:
 ```bash
 cp .env.example .env.local
 ```
 
-Update `.env.local`:
-```
+Configure the Next.js environment:
+```env
 NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
-NEXT_PUBLIC_APP_NAME=Admin Dashboard
+NEXT_PUBLIC_APP_NAME="V8 Dashboard"
 ```
 
-### 3. Start Development Server
-
+### 3. Start Next.js Dev Server
 ```bash
 npm run dev
 ```
-
-Frontend runs on `http://localhost:3000`
-
-## Running the Application
-
-### Terminal 1 - Backend
-
-```bash
-cd backend
-npm install
-npm run db:seed
-npm run start:dev
-```
-
-### Terminal 2 - Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Access the Application
-
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3001/api/v1
-- **Login Credentials**:
-  - Email: `admin@example.com`
-  - Password: `admin123`
-
-## API Documentation
-
-### Authentication Endpoints
-
-#### POST /auth/signup
-Register a new user
-```json
-{
-  "email": "user@example.com",
-  "username": "username",
-  "password": "password123",
-  "firstName": "John",
-  "lastName": "Doe"
-}
-```
-
-#### POST /auth/signin
-Login with email and password
-```json
-{
-  "email": "admin@example.com",
-  "password": "admin123"
-}
-```
-
-Response:
-```json
-{
-  "accessToken": "jwt_token",
-  "refreshToken": "refresh_token",
-  "user": {
-    "id": "user_id",
-    "email": "admin@example.com",
-    "username": "admin",
-    "firstName": "Admin",
-    "lastName": "User",
-    "role": "ADMIN"
-  }
-}
-```
-
-#### POST /auth/refresh
-Refresh access token
-```json
-{
-  "refreshToken": "refresh_token"
-}
-```
-
-### Users Endpoints
-
-#### GET /users
-Get all users (paginated)
-- Query: `page`, `limit`, `search`, `role`
-
-#### GET /users/profile
-Get current user profile (requires auth)
-
-#### GET /users/:id
-Get user by ID (admin only)
-
-#### POST /users
-Create new user (admin only)
-
-#### PUT /users/:id
-Update user (admin or self)
-
-#### PUT /users/:id/role
-Update user role (admin only)
-
-#### DELETE /users/:id
-Delete user (soft delete, admin only)
-
-#### GET /users/stats
-Get user statistics (admin only)
-
-### Content Endpoints
-
-#### GET /content
-Get all content (paginated)
-- Query: `page`, `limit`, `search`, `status`, `category`
-
-#### GET /content/:id
-Get content by ID
-
-#### POST /content
-Create new content (editor+)
-
-#### PUT /content/:id
-Update content (editor+)
-
-#### DELETE /content/:id
-Delete content (editor+)
-
-#### GET /content/stats
-Get content statistics
-
-### Notifications Endpoints
-
-#### GET /notifications
-Get user notifications
-
-#### GET /notifications/unread-count
-Get unread notification count
-
-#### PUT /notifications/:id/read
-Mark notification as read
-
-#### PUT /notifications/mark-all-read
-Mark all notifications as read
-
-#### DELETE /notifications/:id
-Delete notification
-
-### Logs Endpoints
-
-#### GET /logs
-Get activity logs (admin only)
-- Query: `page`, `limit`, `userId`, `type`, `resource`
-
-#### GET /logs/stats
-Get logs statistics (admin only)
-
-## Features
-
-### 🔐 Authentication & Authorization
-- JWT-based authentication
-- Refresh token mechanism
-- Role-based access control (RBAC)
-- Protected routes (frontend & backend)
-
-### 👥 User Management
-- Create, read, update, delete users
-- Role assignment
-- User statistics
-- User activity tracking
-
-### 📝 Content Management
-- Create, publish, archive content
-- Content categorization and tagging
-- View count tracking
-- Search and filtering
-
-### 📊 Analytics
-- User statistics
-- Content performance
-- Activity logging
-- Trend analysis
-
-### 📬 Notifications System
-- Real-time notifications
-- Read/unread status
-- Notification management
-
-### 🎨 UI Features
-- Modern Bootstrap 5 customization
-- Responsive design
-- Dark mode ready
-- Smooth animations
-- Tables with sorting and filtering
-- Modal dialogs
-- Toast notifications
-
-## Customization
-
-### Colors and Branding
-
-Edit `frontend/styles/variables.scss`:
-```scss
-$primary: #4f46e5;  // Change primary color
-$secondary: #6b7280;
-$success: #10b981;
-$danger: #ef4444;
-```
-
-### Adding New Modules
-
-#### Backend Module Template
-
-```bash
-# Create module structure
-src/modules/mymodule/
-├── mymodule.controller.ts
-├── mymodule.service.ts
-├── mymodule.module.ts
-└── dto/
-    └── index.ts
-```
-
-#### Register in app.module.ts
-
-```typescript
-import { MymoduleModule } from './modules/mymodule/mymodule.module';
-
-@Module({
-  imports: [
-    // ... other imports
-    MymoduleModule,
-  ],
-})
-export class AppModule {}
-```
-
-### Database Changes
-
-1. Update `prisma/schema.prisma`
-2. Run migration:
-   ```bash
-   npm run db:migrate
-   ```
-
-## Troubleshooting
-
-### CORS Error
-- Ensure `CORS_ORIGIN` in backend `.env` matches your frontend URL
-- Default: `http://localhost:3000`
-
-### Database Connection Error
-- Verify PostgreSQL is running
-- Check `DATABASE_URL` in `.env`
-- Ensure database exists
-
-### JWT Token Error
-- Verify `JWT_SECRET` is set in `.env`
-- Check token expiration in `.env`
-
-### Port Already in Use
-- Backend: Change `PORT` in `.env`
-- Frontend: Use `npm run dev -- -p 3001`
-
-## Deployment
-
-### Backend (Vercel/Heroku)
-1. Set environment variables
-2. Deploy with `npm run build && npm run start:prod`
-
-### Frontend (Vercel/Netlify)
-1. Connect GitHub repository
-2. Set `NEXT_PUBLIC_API_URL` environment variable
-3. Deploy automatically
-
-## Performance Optimization
-
-- Pagination on all list endpoints
-- Lazy loading components
-- Image optimization
-- Code splitting
-- Caching strategies
-
-## Security Best Practices
-
-✅ Implemented:
-- JWT authentication
-- CORS protection
-- Input validation
-- SQL injection prevention (Prisma ORM)
-- XSS protection
-
-⚠️ Additional for Production:
-- Rate limiting
-- HTTPS enforcement
-- Security headers (Helmet)
-- Database encryption
-- API key rotation
-
-## Support & License
-
-MIT License - Feel free to use for personal and commercial projects.
+The Next.js client will start running at `http://localhost:3000`.
 
 ---
 
-**Happy coding! 🚀**
+## 🚀 Running the Application
+
+For full-stack local development:
+
+### Terminal 1: Backend
+```bash
+cd backend
+npm run start:dev
+```
+
+### Terminal 2: Frontend
+```bash
+cd frontend
+npm run dev
+```
+
+Open your browser to `http://localhost:3000` to access the Dashboard.
+*   **Default Admin Credentials** (or bypass mode if configured):
+    *   *Email:* `admin@example.com`
+    *   *Password:* `admin123`
+
+---
+
+## 🗄️ Database Schema & Migrations
+
+Because this project utilizes **SQL Server** tables compatible with an ASP.NET Core identity system (e.g. `AspNetUsers`, `AspNetUserRoles`, `AspNetRoles`), the database schema is managed accordingly:
+
+*   **View Schema:** You can inspect the data model under `backend/prisma/schema.prisma`.
+*   **Database Synchronization:** If the remote SQL Server schema changes, use:
+    ```bash
+    npx prisma db pull
+    npx prisma generate
+    ```
+*   **Direct Access:** To explore the database contents directly from VS Code or a terminal, run:
+    ```bash
+    npx prisma studio
+    ```
+
+---
+
+## 🔍 Troubleshooting
+
+### SQL Server Connection Error
+*   Ensure SQL Server is running and allows remote connections over TCP/IP.
+*   Make sure port `1433` is open.
+*   Verify credentials and configuration flags (`encrypt=false;trustServerCertificate=true;` are often required for local development/remote staging).
+
+### Next.js Build Fails
+*   If Next.js complains about types, run `npm run build` locally in the frontend directory to verify and update the `.next` artifacts.
+
+### CORS Blocked
+*   Ensure the backend `.env` file contains `CORS_ORIGIN=http://localhost:3000` to allow the frontend Next.js app to make API calls.
